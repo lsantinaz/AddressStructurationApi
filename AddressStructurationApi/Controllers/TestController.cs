@@ -6,9 +6,8 @@ namespace AddressStructurationApi.Controllers
     [Route("[controller]")]
     public class TestController : ControllerBase
     {
-
-        // Méthode GET de test
-        [HttpGet(Name = "GetTest")]
+         // Méthode GET de test
+        [HttpGet]
         public ActionResult<string> Get()
         {
             return "test";
