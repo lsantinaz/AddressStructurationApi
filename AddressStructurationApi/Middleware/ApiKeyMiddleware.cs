@@ -33,7 +33,7 @@ public class ApiKeyMiddleware
         if (!context.Request.Headers.TryGetValue(API_KEY_HEADER_NAME, out var extractedApiKey) || extractedApiKey != _apiKey)
         {
             context.Response.StatusCode = 401; // Unauthorized
-            await context.Response.WriteAsync("Clé API invalide");
+            await context.Response.WriteAsync("Api Key invalide");
             return;
         }
 

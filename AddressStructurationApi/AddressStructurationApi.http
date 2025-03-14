@@ -1,6 +1,6 @@
 @AddressStructurationApi_HostAddress = http://localhost:5092
 
-GET {{AddressStructurationApi_HostAddress}}/weatherforecast/
+GET {{AddressStructurationApi_HostAddress}}/test/
 Accept: application/json
 
 ###
