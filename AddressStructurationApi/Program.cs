@@ -1,30 +1,25 @@
+using AddressStructurationApi.Configuration;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.OpenApi.Models;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
+// Ajout des services de l'application
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
-
-// Configuration de Swagger pour la documentation
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    c.IncludeXmlComments(xmlPath);
-});
+// Documentation Swagger
+builder.Services.AddSwaggerConfiguration(); 
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Configure le pipeline HTTP
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    // Utilise Swagger
+    app.UseSwaggerConfiguration(app.Environment); 
+
     app.MapOpenApi();
 }
 
