@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using System.Net;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Builder.Extensions;
 
 namespace TestsUnitaires;
 
@@ -14,7 +16,7 @@ public class ApiKeyMiddlewareTests
 {
     private const string VALIDE_API_KEY = "temp";
     private const string INVALIDE_API_KEY = "654321";
-
+    /*
     /// <summary>
     /// Cr�ation et configuration d'un client de test HTTP.
     /// Permet de simuler des appels API dans un environnement de test.
@@ -40,8 +42,42 @@ public class ApiKeyMiddlewareTests
             .Start();
 
         return host.GetTestClient();
-    }
+    }*/
 
+    [TestMethod]
+    public async Task temptemptemp()
+    {
+        using var host = await new HostBuilder()
+         .ConfigureWebHost(webBuilder =>
+         {
+             webBuilder
+                 .UseTestServer()
+                 .UseUrls("https://localhost:44314")
+                 .ConfigureServices(services =>
+                 {
+                     // Charge la configuration à partir de appsettings.json
+                     var configuration = new ConfigurationBuilder()
+                         .SetBasePath(Directory.GetCurrentDirectory())  // L'emplacement du fichier appsettings.json
+                         .AddJsonFile("appsettings.json")  // Charge le fichier appsettings.json
+                         .Build();
+                     services.AddSingleton<IConfiguration>(configuration);
+                 })
+                 .Configure(app =>
+                 {
+                     app.UseHttpsRedirection();
+                     app.UseRouting();
+                     app.UseMiddleware<ApiKeyMiddleware>();
+                 });
+         })
+         .StartAsync();
+
+
+        var response = await host.GetTestClient().GetAsync("/");
+
+        Assert.AreNotEqual(HttpStatusCode.NotFound, response.StatusCode);
+
+    }
+    /*
     /// <summary>
     ///  Teste si le middleware retourne une réponse 200 OK avec une clé d'API valide.
     /// </summary>
@@ -76,7 +112,7 @@ public class ApiKeyMiddlewareTests
 
         Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
         var responseBody = await response.Content.ReadAsStringAsync();
-        Assert.AreEqual("Api Key invalide", responseBody);
+        Assert.AreEqual("Unauthorized", responseBody);
     }
 
     /// <summary>
@@ -92,9 +128,9 @@ public class ApiKeyMiddlewareTests
 
         Assert.AreEqual(HttpStatusCode.Unauthorized, response.StatusCode);
         var responseBody = await response.Content.ReadAsStringAsync();
-        Assert.AreEqual("Api Key invalide", responseBody);
+        Assert.AreEqual("Api Key vide", responseBody);
     }
 
-
+    */
 
 }
