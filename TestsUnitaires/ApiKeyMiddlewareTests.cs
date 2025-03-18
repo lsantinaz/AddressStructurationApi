@@ -16,10 +16,10 @@ public class ApiKeyMiddlewareTests
     private const string INVALIDE_API_KEY = "654321";
 
     /// <summary>
-    /// Création et configuration d'un client de test HTTP.
+    /// Crï¿½ation et configuration d'un client de test HTTP.
     /// Permet de simuler des appels API dans un environnement de test.
     /// </summary>
-    /// <returns>Un client HTTP qui intéragira avec le serveur de test</returns>
+    /// <returns>Un client HTTP qui intï¿½ragira avec le serveur de test</returns>
     private HttpClient CreateTestClient()
     {
         var host = new HostBuilder()
@@ -43,7 +43,7 @@ public class ApiKeyMiddlewareTests
     }
 
     /// <summary>
-    ///  Teste si le middleware retourne une réponse 200 OK avec une clé d'API valide.
+    ///  Teste si le middleware retourne une rÃ©ponse 200 OK avec une clÃ© d'API valide.
     /// </summary>
     /// <returns></returns>
     [TestMethod]
@@ -63,7 +63,7 @@ public class ApiKeyMiddlewareTests
     }
 
     /// <summary>
-    /// Teste si le middleware retourne une réponse 401 Unauthorized avec une clé d'API invalide.
+    /// Teste si le middleware retourne une rÃ©ponse 401 Unauthorized avec une clÃ© d'API invalide.
     /// </summary>
     /// <returns></returns>
     [TestMethod]
@@ -80,7 +80,7 @@ public class ApiKeyMiddlewareTests
     }
 
     /// <summary>
-    /// Teste si le middleware retourne une réponse 401 Unauthorized lorsque la clé d'API est absente.
+    /// Teste si le middleware retourne une rÃ©ponse 401 Unauthorized lorsque la clÃ© d'API est absente.
     /// </summary>
     /// <returns></returns>
     [TestMethod]
