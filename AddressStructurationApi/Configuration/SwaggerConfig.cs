@@ -6,7 +6,7 @@ namespace AddressStructurationApi.Configuration
     public static class SwaggerConfig
     {
         /// <summary>
-        /// Configure la documentation Swagger pour l'API.
+        /// Configuration de la documentation Swagger
         /// </summary>
         /// <param name="services">Collection de services de l'application </param>
         public static void AddSwaggerConfiguration(this IServiceCollection services)
