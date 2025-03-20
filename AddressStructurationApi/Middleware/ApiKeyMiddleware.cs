@@ -6,23 +6,23 @@ using System.Threading.Tasks;
 public class ApiKeyMiddleware(RequestDelegate next, IConfiguration configuration)
 {
 
-    private const string API_KEY_HEADER_NAME = "X-API-Key";
+    private string _headerKeyName = configuration["headerKeyName"];
     private string _apikey = configuration["ApiKey"];
 
     public async Task InvokeAsync(HttpContext context)
     {
-        if (!context.Request.Headers.TryGetValue(API_KEY_HEADER_NAME, out
+        if (!context.Request.Headers.TryGetValue(_headerKeyName, out
                 var extractedApiKey))
         {
             context.Response.StatusCode = 401;
-            await context.Response.WriteAsync("Api Key vide");
+            await context.Response.WriteAsJsonAsync(new {message = "Header key invalide" });
             return;
         }
 
         if (!_apikey.Equals(extractedApiKey))
         {
             context.Response.StatusCode = 401;
-            await context.Response.WriteAsync("Unauthorized");
+            await context.Response.WriteAsJsonAsync(new {message="Unauthorized"});
             return;
         }
         await next(context);
