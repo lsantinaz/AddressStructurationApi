@@ -9,6 +9,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Data;
 using System.Xml.Linq;
 using System.Net.Http;
+using Microsoft.AspNetCore.Razor.TagHelpers;
 
 namespace AddressStructurationApi.Controllers
 {
@@ -33,52 +34,28 @@ namespace AddressStructurationApi.Controllers
         public async Task<ActionResult> Post([FromBody] Structuration request)
         {
             // Récupération des champs du Body
-            string tostrcuture = request.tostructure;
+            string tostructure = request.tostructure;
             bool? ISO20022 = request.ISO20022;
 
-            /** Structuration de l'adresse **/
-            // nouveau modèle de requête, convertit directement en JSON valide
-            var payload = new RequestIAWithISO20022(tostrcuture);
-            string jsonPayLoad = payload.toJson();
-            
-            // Envoie la requête au modèle IA
-            var responseModelIA = await CallModelIA(jsonPayLoad);
-
-            // Obtient uniquement les champs structurés, et non toute la réponse
-            var structuredJson = GetContentMessageOfModelIA(JsonSerializer.Serialize(responseModelIA));
-
-
-            return Ok(structuredJson);
-
-
-            /** Structuration de l'adresse **/
-            // En cas de norme ISO 20022
-            if (ISO20022 == false)
+            try
             {
-
-                // En cas de Swissdec
-                // Nécessite la structuration du nom/prénom ou la détection d'une société/entreprise
-                // Interaction avec le modèle IA 
-
+                return Ok(await structurationWithIA(tostructure));
             }
-            // Structuration du reste de l'adresse
+            catch (Exception ex)
+            {
+                return StatusCode(500, new {erreur = ex.Message});
+            }
 
-            /** Vérification de l'adresse **/
-
-            // Détection de données Suisse
-            // Si oui : contacter l'API de la Poste
-
-            // Retourne l'adresse structuré 
-
-            return Ok();
+            
+            
         }
 
         /// <summary>
         /// Cette fonction appel le modèle IA avec le prompt inscrit et retourne la réponse 
         /// complète du modèle en format JSON
         /// </summary>
-        /// <param name="tostructure">chaine de caractère à structurer</param>
-        /// <returns>Un JSON structuré</returns>
+        /// <param name="request">chaine de caractère à structurer</param>
+        /// <returns>La réponse JSON du modèle IA</returns>
         private async Task<object> CallModelIA(string request)
         {
             var url = "http://10.11.9.27:11434/api/chat";
@@ -114,7 +91,27 @@ namespace AddressStructurationApi.Controllers
                                       .GetProperty("content")
                                       .ToString();
 
-           
+        }
+
+        /// <summary>
+        /// Méthode finale de structuration qui nous retourne le JSON final
+        /// </summary>
+        /// <param name="tostructure"></param>
+        /// <returns>Le JSON structuré final</returns>
+        private async Task<JsonElement> structurationWithIA(string tostructure)
+        {
+            /** Structuration de l'adresse **/
+            // nouveau modèle de requête, convertit directement en JSON valide
+            var payload = new RequestIAWithISO20022(tostructure);
+            string jsonPayLoad = payload.toJson();
+
+            // Envoie la requête au modèle IA
+            var responseModelIA = await CallModelIA(jsonPayLoad);
+
+            // Obtient uniquement les champs structurés, et non toute la réponse
+            var response = GetContentMessageOfModelIA(JsonSerializer.Serialize(responseModelIA));
+
+            return JsonSerializer.Deserialize<JsonElement>(response);
         }
     }
 }
