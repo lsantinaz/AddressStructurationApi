@@ -5,40 +5,50 @@ using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using System.Text;
 using System.Text.Json.Nodes;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Data;
+using System.Xml.Linq;
 
 namespace AddressStructurationApi.Controllers
 {
 
     [ApiController]
-    public class StructurationController : Controller
+    [Route("api/v1/[controller]")]
+    public class StructurationController : ControllerBase
     {
 
-        private static readonly HttpClient client = new HttpClient();
-
         [HttpPost]
-        [Route("api/v1/structuration")]
-        public ActionResult<string> Post([FromBody] NoStructured request)
+        public ActionResult<string> Post([FromBody] Structuration request)
         {
-            //Si le JSON ne correspond pas au modèle on retourne une erreur 400 Bad Request
-            if (request == null)
-            {
-                HttpContext.Response.StatusCode = 400;
-                return BadRequest("JSON Invalide");
-            }
+            // Déclaration du JSON final
+            var jsonStructured = new { };
 
             /** Structuration de l'adresse **/
-            
             // En cas de norme ISO 20022
-            if (request.ISO20022)
+            if (request.ISO20022 ==  false)
             {
                 
-            } else
-            {
-                
+                // En cas de Swissdec
+                // Nécessite la structuration du nom/prénom ou la détection d'une société/entreprise
+                // Interaction avec le modèle IA 
+               
             }
 
-            return "test";
+            // Structuration du reste de l'adresse
+
+
+            // Retourne l'adresse structuré 
+
+            return Ok();
         }
-    }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Structuration()
+        {
+
+        }
+    }  
     
 }

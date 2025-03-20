@@ -23,6 +23,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+
 // Ajout du middleware pour la vérification de la clé API
 app.UseMiddleware<ApiKeyMiddleware>();
 
