@@ -21,7 +21,8 @@ namespace AddressStructurationApi.Controllers
         private readonly HttpClient _httpClient;
 
         /// <summary>
-        /// Constructeur d'une instance HttpClient 
+        /// Constructeur d'une instance HttpClient qui permet d'utiliser ce service
+        /// pour les appels aux différentes API externe (modèle et poste)
         /// </summary>
         /// <param name="httpClientFactory">Factory d'un client http</param>
         public StructurationController(IHttpClientFactory httpClientFactory)
@@ -29,7 +30,7 @@ namespace AddressStructurationApi.Controllers
             _httpClient = httpClientFactory.CreateClient();
         }
 
-
+        
         [HttpPost]
         public async Task<ActionResult> Post([FromBody] Structuration request)
         {
@@ -39,7 +40,7 @@ namespace AddressStructurationApi.Controllers
 
             try
             {
-                return Ok(await structurationWithIA(tostructure));
+                return Ok(await structurationAddress(tostructure));
             }
             catch (Exception ex)
             {
@@ -58,13 +59,14 @@ namespace AddressStructurationApi.Controllers
         /// <returns>La réponse JSON du modèle IA</returns>
         private async Task<object> CallModelIA(string request)
         {
+            // URL du modèle IA, lancé par Ollama
             var url = "http://10.11.9.27:11434/api/chat";
 
             // Modèle de requête envoyé à l'IA
 
             var contenu = new StringContent(request, Encoding.UTF8, "application/json");
 
-            // POST de la requête
+            // réponse du POST
             var reponse = await _httpClient.PostAsync(url, contenu);
 
             if (reponse.IsSuccessStatusCode)
@@ -94,19 +96,18 @@ namespace AddressStructurationApi.Controllers
         }
 
         /// <summary>
-        /// Méthode finale de structuration qui nous retourne le JSON final
+        /// Méthode finale de structuration qui nous retourne le JSON structuré final 
         /// </summary>
-        /// <param name="tostructure"></param>
+        /// <param name="tostructure">données à structurer</param>
         /// <returns>Le JSON structuré final</returns>
-        private async Task<JsonElement> structurationWithIA(string tostructure)
+        private async Task<JsonElement> structurationAddress(string tostructure)
         {
             /** Structuration de l'adresse **/
             // nouveau modèle de requête, convertit directement en JSON valide
-            var payload = new RequestIAWithISO20022(tostructure);
-            string jsonPayLoad = payload.toJson();
+            string requestToIA = new RequestIAWithISO20022(tostructure).toJson();
 
             // Envoie la requête au modèle IA
-            var responseModelIA = await CallModelIA(jsonPayLoad);
+            var responseModelIA = await CallModelIA(requestToIA);
 
             // Obtient uniquement les champs structurés, et non toute la réponse
             var response = GetContentMessageOfModelIA(JsonSerializer.Serialize(responseModelIA));
