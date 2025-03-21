@@ -36,19 +36,17 @@ namespace AddressStructurationApi.Controllers
         {
             // Récupération des champs du Body
             string tostructure = request.tostructure;
-            bool? ISO20022 = request.ISO20022;
+            bool ISO20022 = request.ISO20022;
 
             try
             {
-                return Ok(await structurationAddress(tostructure));
+                return Ok(await structurationAddress(tostructure, ISO20022));
             }
             catch (Exception ex)
             {
                 return StatusCode(500, new {erreur = ex.Message});
             }
 
-            
-            
         }
 
         /// <summary>
@@ -100,7 +98,7 @@ namespace AddressStructurationApi.Controllers
         /// </summary>
         /// <param name="tostructure">données à structurer</param>
         /// <returns>Le JSON structuré final</returns>
-        private async Task<JsonElement> structurationAddress(string tostructure)
+        private async Task<JsonElement> structurationAddress(string tostructure, bool ISO20022)
         {
             /** Structuration de l'adresse **/
             // nouveau modèle de requête, convertit directement en JSON valide

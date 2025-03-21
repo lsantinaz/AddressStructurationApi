@@ -12,7 +12,7 @@ namespace AddressStructurationApi.Models
         public string tostructure { get; set; }
 
         [Required(ErrorMessage = "Le champs ISO20022 est obligatoire et ne peut pas être vide.")]
-        public bool? ISO20022 { get; set; }
+        public bool ISO20022 { get; set; }
 
     }
 }
