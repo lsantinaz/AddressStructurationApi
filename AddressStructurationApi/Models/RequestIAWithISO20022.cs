@@ -15,16 +15,13 @@ namespace AddressStructurationApi.Models
     public class RequestIAWithISO20022 : BaseRequestIA
     {
      
-
         /// <summary>
         /// 
         /// </summary>
         /// <param name="toStructure">chaine de caractère à structurer</param>
         public RequestIAWithISO20022(string toStructure)
         {
-
-            BuildRequest(toStructure);
-            
+            BuildRequest(toStructure);          
         }
 
         /// <summary>
@@ -44,7 +41,7 @@ namespace AddressStructurationApi.Models
                 new Message
                 {
                     role = "user",
-                    content = toStructure
+                    content = "Structure cette adresse : " + toStructure
                 }
             };
 
