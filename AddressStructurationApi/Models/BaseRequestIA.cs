@@ -58,7 +58,7 @@ namespace AddressStructurationApi.Models
 
         // Indique si la réponse est streamer ou non
         public bool stream { get; set; } = false;
-
+        
         // Liste des messages envoyés (contenant "role" et "content")
         public List<Message> messages { get; set; }
         
