@@ -21,7 +21,11 @@ namespace AddressStructurationApi.Controllers
     public class StructurationController : ControllerBase
     {
         private readonly HttpClient _httpClient;
-        
+        private string URL_MODEL_IA = "http://10.11.9.27:11434/api/chat";
+        private string URL_SWISS_POST_API = "https://webservices-int.post.ch:17023/IN_SYNSYN_EXT_INT/REST/v1/autocomplete4";
+        private string USERNAME_SWISS_POST_API = "TU_196764_0102";
+        private string PASSWORD_SWISS_POST_API = "NKf8KRSY";
+
 
 
         /// <summary>
@@ -35,8 +39,6 @@ namespace AddressStructurationApi.Controllers
         }
 
 
-
-
         [HttpPost]
         public async Task<ActionResult> Post([FromBody] Structuration request)
         {
@@ -46,13 +48,87 @@ namespace AddressStructurationApi.Controllers
 
             try
             {
-                return Ok(await structurationAddress(tostructure, ISO20022));
+                var structuredAddress = await structurationAddress(tostructure, ISO20022);
+                var verificatedAddress = await verificationAddress(JsonSerializer.Serialize(structuredAddress));
+
+                return Ok(verificatedAddress);
             }
-            catch (Exception ex)
+            catch(Exception ex)
             {
                 return StatusCode(500, new { erreur = ex.Message });
             }
+        }
 
+        /// <summary>
+        /// Structuration de l'adresse à l'aide du modèle d'intelligence artificielle
+        /// </summary>
+        /// <param name="tostructure">Chaine de caractère à structurer</param>
+        /// <param name="ISO20022">Boolean concernant la norme ISO20022</param>
+        /// <returns>Le JSON structuré final</returns>
+        private async Task<JsonElement> structurationAddress(string tostructure, bool ISO20022)
+        {
+            /** Structuration de l'adresse **/
+            string requestToIA = "";
+
+            if (ISO20022)
+            {
+                requestToIA = new RequestIAWithISO20022(tostructure).toJson();
+            }
+            else
+            {
+                requestToIA = new RequestIAWithoutISO20022(tostructure).toJson();
+            }
+
+            // Appel à l'API et réponse finale
+            var responseOfModelIA = await CallModelIA(requestToIA);
+            var responseFinal = GetContentMessageOfModelIA(JsonSerializer.Serialize(responseOfModelIA));
+
+            return JsonSerializer.Deserialize<JsonElement>(responseFinal);
+        }
+
+        /// <summary>
+        /// Méthode qui vérifie une adresse passée en paramètre.
+        /// Utilisation du service Assistant d'adresse via Webservice de la Poste Suisse.
+        /// Elle traite une adresse déjà structurée passée en paramètre (modèle IA) pour ensuite 
+        /// envoyer les données à l'API de la Poste pour que celle-ci corrige les champs.
+        /// </summary>
+        /// <param name="responseOfModel">Chaine de caractère de la réponse structurée du modèle IA</param>
+        /// <returns>la réponse JSON de l'API de la Poste</returns>
+        private async Task<JsonElement> verificationAddress(string responseOfModel)
+        {
+            string npa = getPropertyOfIAModelResponse(JsonSerializer.Deserialize<JsonElement>(responseOfModel), 1);
+            string localite = getPropertyOfIAModelResponse(JsonSerializer.Deserialize<JsonElement>(responseOfModel), 2);
+            string rue = getPropertyOfIAModelResponse(JsonSerializer.Deserialize<JsonElement>(responseOfModel), 3);
+            string numero = getPropertyOfIAModelResponse(JsonSerializer.Deserialize<JsonElement>(responseOfModel), 4);
+
+            // Appel à l'API de la Poste et réponse finale
+            var responseOfSwissPost = await CallSwissPostAPI(new RequestSwissPostAPI(npa, localite, rue, numero).toJson());
+            var responseFinal = GetContentMessageOfSwissPostAPI(JsonSerializer.Serialize(responseOfSwissPost));
+
+            return JsonSerializer.Deserialize<JsonElement>(responseFinal);
+        }
+
+        /// <summary>
+        /// Fonction qui retourne une seul propriété d'un JSON passé en paramètre
+        /// selon la valeur "order" passé en paramètre.
+        /// Les valeurs définit sont celles que le modèle IA retourne (npa, localite, rue et numero).
+        /// Cette méthode est utilisée pour la vérification de l'adresse.
+        /// </summary>
+        /// <param name="json">JSON à parcouri</param>
+        /// <param name="order">INT, valeur correspondant à l'ordre de l'élément</param>
+        /// <returns>Chaine de caractère de la valeur du JSON correspondante à l'ordre</returns>
+        private string getPropertyOfIAModelResponse(JsonElement json, int order)
+        {
+            var values = new string[]
+            {
+                json.GetProperty("npa").ToString(),
+                json.GetProperty("localite").ToString(),
+                json.GetProperty("rue").ToString(),
+                json.GetProperty("numero").ToString()
+            };
+
+            // Retourne la valeur à l'index du tableau (nécessite - 1)
+            return values[order - 1];
         }
 
         /// <summary>
@@ -63,15 +139,11 @@ namespace AddressStructurationApi.Controllers
         /// <returns>La réponse JSON du modèle IA</returns>
         private async Task<object> CallModelIA(string request)
         {
-            // URL du modèle IA, lancé par Ollama
-            var url = "http://10.11.9.27:11434/api/chat";
-
-            // Modèle de requête envoyé à l'IA
 
             var contenu = new StringContent(request, Encoding.UTF8, "application/json");
 
             // réponse du POST
-            var reponse = await _httpClient.PostAsync(url, contenu);
+            var reponse = await _httpClient.PostAsync(URL_MODEL_IA, contenu);
 
             if (reponse.IsSuccessStatusCode)
             {
@@ -96,78 +168,35 @@ namespace AddressStructurationApi.Controllers
             return jsonDoc.RootElement.GetProperty("message")
                                       .GetProperty("content")
                                       .ToString();
-
         }
 
-        /// <summary>
-        /// Méthode structuration finale qui nous retourne le JSON structuré final 
-        /// </summary>
-        /// <param name="tostructure">Chaine de caractère à structurer</param>
-        /// <param name="ISO20022">Boolean concernant la norme ISO20022</param>
-        /// <returns>Le JSON structuré final</returns>
-        private async Task<JsonElement> structurationAddress(string tostructure, bool ISO20022)
-        {
-            /** Structuration de l'adresse **/
-            string requestToIA = "";
-
-
-            
-
-            /* TEMP
-            if (ISO20022)
-            {
-                requestToIA = new RequestIAWithISO20022(tostructure).toJson();
-            }
-            else
-            {
-                requestToIA = new RequestIAWithoutISO20022(tostructure).toJson();
-            }*/
-
-            // Envoie la requête au modèle IA
-            // TEMP var responseModelIA = await CallModelIA(requestToIA);
-            var responseModelIA = await CallSwissPostAPI();
-
-            // Obtient uniquement les champs structurés, et non toute la réponse
-            // TEMP var response = GetContentMessageOfModelIA(JsonSerializer.Serialize(responseModelIA));
-
-
-            // TEMP return JsonSerializer.Deserialize<JsonElement>(response);
-            return JsonSerializer.Deserialize<JsonElement>(JsonSerializer.Serialize(responseModelIA));
-        }
-
-
+        
         /// <summary>
         /// Appel de l'API de la poste
         /// </summary>
-        /// <returns></returns>
-        private async Task<object> CallSwissPostAPI()
+        /// <returns>un JSON contenant le npa, la localité, la rue, le numéro etc...</returns>
+        private async Task<object> CallSwissPostAPI(string request)
         {
 
-            var url = "https://webservices-int.post.ch:17023/IN_SYNSYN_EXT_INT/REST/v1/autocomplete4";
-
-            string username = "TU_196764_0102";
-            string password = "NKf8KRSY";
-
             // Ajouter l'en-tête "Authorization" avec la méthode Basic Auth
-            string credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{username}:{password}"));
+            string credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{USERNAME_SWISS_POST_API}:{PASSWORD_SWISS_POST_API}"));
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", credentials);
             
-
-            _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
-
-            // Création du corps de requête
-            var requestBody = new RequestSwissPostAPI("2900", "porren", "route de bure", "61").toJson();
-
-
-            var contenu = new StringContent(requestBody, Encoding.UTF8, "application/json");
+            var contenu = new StringContent(request, Encoding.UTF8, "application/json");
             
             // Obtient la réponse par méthode POST
-            var reponse = await _httpClient.PostAsync(url, contenu);
+            var reponse = await _httpClient.PostAsync(URL_SWISS_POST_API, contenu);
+            
+            // Test de succès et réponse retournée
+            if (reponse.IsSuccessStatusCode)
+            {
 
-            // Lit le body du JSON qui contient la réponse
-            var responsePost = GetContentMessageOfSwissPostAPI(await reponse.Content.ReadAsStringAsync());
+                var responseSwissPostApi = await reponse.Content.ReadAsStringAsync();
 
-            return JsonSerializer.Deserialize<JsonElement>(responsePost);
+                return JsonSerializer.Deserialize<object>(responseSwissPostApi);
+            }
+
+            return StatusCode((int)reponse.StatusCode, await reponse.Content.ReadAsStringAsync());
         }
 
         private string GetContentMessageOfSwissPostAPI(string jsonResponse)
@@ -176,7 +205,6 @@ namespace AddressStructurationApi.Controllers
             return jsonDoc.RootElement.GetProperty("QueryAutoComplete4Result")
                                       .GetProperty("AutoCompleteResult")
                                       .ToString();
-
         }
     }
 }

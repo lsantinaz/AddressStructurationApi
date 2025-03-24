@@ -4,26 +4,46 @@ namespace AddressStructurationApi.Models
 {
 
     /*
+     * Exemple de format d'entrée
+        {
+          "request": {
+            "ONRP": 0,
+            "ZipCode": "",
+            "ZipAddition": "",
+            "TownName": "",
+            "STRID": 0,
+            "StreetName": "Route de bure",
+            "HouseKey": 0,
+            "HouseNo": "61",
+            "HouseNoAddition": ""
+          },
+        "zipOrderMode":1,
+        "zipFilterMode":0
+        }
      * 
-         * {
-      "request": {
-        "ONRP": 0,
-        "ZipCode": "",
-        "ZipAddition": "",
-        "TownName": "",
-        "STRID": 0,
-        "StreetName": "Sur la cote",
-        "HouseKey": 0,
-        "HouseNo": "106",
-        "HouseNoAddition": ""
-      },
-    "zipOrderMode":1,
-    "zipFilterMode":0
-    }
+     * Exemple de format de sortie
+        {
+            "QueryAutoComplete4Result": {
+                "AutoCompleteResult": [
+                    {
+                        "Canton": "JU",
+                        "CountryCode": "CH",
+                        "HouseKey": "0",
+                        "HouseNo": "",
+                        "HouseNoAddition": "",
+                        "ONRP": "1602",
+                        "STRID": "45804",
+                        "StreetName": "Route de Bure",
+                        "TownName": "Porrentruy",
+                        "ZipAddition": "00",
+                        "ZipCode": "2900"
+                    }
+                ],
+                "Status": 0
+            }
+        }
      * 
-     * 
-     * 
-     * */
+     */
 
 
     public class RequestSwissPostAPI
